@@ -54,7 +54,7 @@ module ActiveRecord
       # Accepts an array, or string of SQL conditions and sanitizes
       # them into a valid SQL fragment for an ORDER clause.
       #
-      #   sanitize_sql_for_order(["field(id, ?)", [1,3,2]])
+      #   sanitize_sql_for_order([Arel.sql("field(id, ?)"), [1,3,2]])
       #   # => "field(id, 1,3,2)"
       #
       #   sanitize_sql_for_order("id ASC")
@@ -143,8 +143,9 @@ module ActiveRecord
 
         if unexpected
           raise(ActiveRecord::UnknownAttributeReference,
-            "Query method called with non-attribute argument(s): " +
-            unexpected.map(&:inspect).join(", ")
+            "Query method called with non-attribute argument(s): " \
+            "#{unexpected.map(&:inspect).join(", ")}" \
+            "Known-safe values can be passed by wrapping them in Arel.sql()."
           )
         end
       end
