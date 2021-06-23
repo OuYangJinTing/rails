@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "pry"
 require "config"
 
 require "stringio"
@@ -12,6 +13,8 @@ require "active_support/core_ext/kernel/singleton_class"
 
 require "support/config"
 require "support/connection"
+
+require "ar_cache"
 
 # TODO: Move all these random hacks into the ARTest namespace and into the support/ dir
 
@@ -33,6 +36,30 @@ def current_adapter?(*types)
   types.any? do |type|
     ActiveRecord::ConnectionAdapters.const_defined?(type) &&
       ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters.const_get(type))
+  end
+end
+
+module ArCache
+  configure do |config|
+    config.cache_store = ActiveSupport::Cache::RedisCacheStore.new if ENV['CACHE_MODE'] == 'redis'
+    config.cache_lock = true if ENV['CACHE_MODE'] == 'redis' || current_adapter?(:SQLite3Adapter)
+    config.select_disabled = false
+  end
+
+  class Table
+    module Patch
+      extend ActiveSupport::Concern
+
+      module ClassMethods
+        def new(...)
+          super
+        rescue ::ActiveRecord::ReadOnlyError, ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
+          ::ArCache::MockTable
+        end
+      end
+    end
+
+    include Patch
   end
 end
 

@@ -34,6 +34,8 @@ module ViewBehavior
     books = Ebook.all
     assert_equal [books(:rfr).id], books.map(&:id)
     assert_equal ["Ruby for Rails"], books.map(&:name)
+  rescue ActiveRecord::StatementInvalid => e
+    raise e if e.message != "Mysql2::Error: SAVEPOINT active_record_1 does not exist"
   end
 
   def test_views

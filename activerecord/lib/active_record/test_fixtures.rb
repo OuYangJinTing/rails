@@ -9,11 +9,15 @@ module ActiveRecord
     def before_setup # :nodoc:
       setup_fixtures
       super
+    ensure
+      ArCache::Configuration.cache_store.clear
     end
 
     def after_teardown # :nodoc:
       super
       teardown_fixtures
+    ensure
+      ArCache::Configuration.cache_store.clear
     end
 
     included do
