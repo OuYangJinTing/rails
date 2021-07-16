@@ -22,6 +22,26 @@ module ActiveModel
   module Translation
     include ActiveModel::Naming
 
+    def self.extended(base)
+      base.class_eval do
+        # Transforms attribute value into a more human format, such as "First name"
+        # instead of "first_name".
+        #
+        #   Person.new(name: "first_name").human_attribute_value("name") # => "First name"
+        #
+        # Specify +options+ with additional translating options.
+        def human_attribute_value(attribute, options = {})
+          if options.has_key?(:value)
+            self.class.human_attribute_value(attribute, nil, options)
+          elsif !respond_to?(attribute)
+            raise UnknownAttributeError.new(self, attribute)
+          else
+            self.class.human_attribute_value(attribute, send(attribute), options)
+          end
+        end
+      end
+    end
+
     # Returns the +i18n_scope+ for the class. Overwrite if you want custom lookup.
     def i18n_scope
       :activemodel
@@ -45,6 +65,7 @@ module ActiveModel
       options   = { count: 1 }.merge!(options)
       parts     = attribute.to_s.split(".")
       attribute = parts.pop
+      attribute = "#{attribute}=#{options.delete(:value)}" if options.has_key?(:value)
       namespace = parts.join("/") unless parts.empty?
       attributes_scope = "#{i18n_scope}.attributes"
 
@@ -60,11 +81,16 @@ module ActiveModel
       end
 
       defaults << :"attributes.#{attribute}"
-      defaults << options.delete(:default) if options[:default]
-      defaults << attribute.humanize
+      defaults << options.delete(:default) if options.has_key?(:default)
+      defaults << attribute.split("=", -1).last.humanize
 
       options[:default] = defaults
       I18n.translate(defaults.shift, **options)
+    end
+
+    def human_attribute_value(attribute, value, options = {}) # :nodoc:
+      options = { value: value }.merge!(options) unless options.has_key?(:value)
+      human_attribute_name(attribute, options)
     end
   end
 end

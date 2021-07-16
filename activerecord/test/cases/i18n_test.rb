@@ -10,23 +10,27 @@ class ActiveRecordI18nTests < ActiveRecord::TestCase
   end
 
   def test_translated_model_attributes
-    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute" } } }
+    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute", "approved=true": "approved" } } }
     assert_equal "topic title attribute", Topic.human_attribute_name("title")
+    assert_equal "approved", Topic.new(approved: true).human_attribute_value("approved")
   end
 
   def test_translated_model_attributes_with_symbols
-    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute" } } }
+    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute", "approved=true": "approved" } } }
     assert_equal "topic title attribute", Topic.human_attribute_name(:title)
+    assert_equal "approved", Topic.new(approved: true).human_attribute_value(:approved)
   end
 
   def test_translated_model_attributes_with_sti
-    I18n.backend.store_translations "en", activerecord: { attributes: { reply: { title: "reply title attribute" } } }
+    I18n.backend.store_translations "en", activerecord: { attributes: { reply: { title: "reply title attribute", "approved=true": "approved" } } }
     assert_equal "reply title attribute", Reply.human_attribute_name("title")
+    assert_equal "approved", Reply.new(approved: true).human_attribute_value("approved")
   end
 
   def test_translated_model_attributes_with_sti_fallback
-    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute" } } }
+    I18n.backend.store_translations "en", activerecord: { attributes: { topic: { title: "topic title attribute", "approved=true": "approved" } } }
     assert_equal "topic title attribute", Reply.human_attribute_name("title")
+    assert_equal "approved", Reply.new(approved: true).human_attribute_value("approved")
   end
 
   def test_translated_model_names

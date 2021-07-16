@@ -424,11 +424,14 @@ internationalization (i18n) framework.
 ```ruby
 class Person
   extend ActiveModel::Translation
+
+  attr_accessor :state
 end
 ```
 
-With the `human_attribute_name` method, you can transform attribute names into a
-more human-readable format. The human-readable format is defined in your locale file(s).
+With the `human_attribute_name` and `human_attribute_value` method, you can transform 
+attribute names and attribute value into a more human-readable format. 
+The human-readable format is defined in your locale file(s).
 
 * config/locales/app.pt-BR.yml
 
@@ -438,10 +441,19 @@ pt-BR:
     attributes:
       person:
         name: 'Nome'
+        state=1: 'Healthy'
 ```
 
 ```ruby
 Person.human_attribute_name('name') # => "Nome"
+
+person = Person.new
+person.human_attribute_value('state') # => "" (return person.state.to_s.humanize if missing translation)
+
+person.state = 1
+person.human_attribute_value('state') # => "Healthy"
+
+person.human_attribute_value('status') # => raise UnknownAttributeError unless person.respond_to?('status')
 ```
 
 ### Lint Tests
